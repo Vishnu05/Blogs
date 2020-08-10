@@ -1,0 +1,12 @@
+
+/blogs/client/node_modules
+
+/comments/node_modules
+
+/posts/node_modules
+
+/posts/package-lock.json
+/comments/package-lock.json
+/blogs/client/package-lock.json
+
+/blogs/client/readme.md
