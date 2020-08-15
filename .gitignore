@@ -11,3 +11,9 @@
 
 /blogs/client/readme.md
 /blogs/client/public/robots.txt
+
+/events/node_modules
+/events/package-lock.json
+
+/query/node_modules
+/query/package-lock.json
