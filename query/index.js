@@ -1,65 +1,61 @@
+const express = require('express');
+const bodyParser = require('body-parser');
+const cors = require('cors');
+const axios = require('axios');
 
-const express = require('express')
-const bodyParser = require('body-parser')
-const cors = require('cors')
+const app = express();
+app.use(bodyParser.json());
+app.use(cors());
 
+const posts = {};
 
-const app = express()
-app.use(bodyParser.json())
-app.use(cors())
+const handleEvent = (type, data) => {
+  if (type === 'PostCreated') {
+    const { id, title } = data;
 
-const posts = {}
+    posts[id] = { id, title, comments: [] };
+  }
 
-/** Post data example */
-/* posts === {
-    'sdfsfs2': {
-        id: 'sdfsfs2',
-        title: 'title of the blog',
-        comments: [{
-            id: 'dfs23',
-            content: 'nice'
-        }, {
-            id: 'bini64',
-            content: 'nice blog!'
-        }]
-    }
-} */
+  if (type === 'CommentCreated') {
+    const { id, content, postId, status } = data;
 
+    const post = posts[postId];
+    post.comments.push({ id, content, status });
+  }
 
+  if (type === 'CommentUpdated') {
+    const { id, content, postId, status } = data;
+
+    const post = posts[postId];
+    const comment = post.comments.find(comment => {
+      return comment.id === id;
+    });
+
+    comment.status = status;
+    comment.content = content;
+  }
+};
 
 app.get('/posts', (req, res) => {
-
-    res.send(posts)
-
-})
+  res.send(posts);
+});
 
 app.post('/events', (req, res) => {
+  const { type, data } = req.body;
 
-    const { type, data } = req.body
+  handleEvent(type, data);
 
-    if (type === 'PostCreated') {
-        const { id, title } = data
+  res.send({});
+});
 
-        posts[id] = { id, title, comments: [] }
-    }
+app.listen(4002, async () => {
+  console.log('Listening on 4002');
 
-    if (type === 'CommentCreated') {
+  const res = await axios.get('http://localhost:4005/events');
 
-        const { id, content, postId } = data
+  for (let event of res.data) {
+    console.log('Processing event:', event.type);
 
-        const post = posts[postId]
-        post.comments.push({ id, content })
-
-    }
-
-    console.log(posts)
-    console.log('hi')
-
-    res.send({})
-})
-
-
-
-app.listen(4002, () => {
-    console.log('Listening on port : 4002 .')
-})
+    handleEvent(event.type, event.data);
+  }
+});
